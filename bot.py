@@ -13,7 +13,17 @@ from googleapiclient.discovery import build
 import os
 from aiogram import Bot, Dispatcher, types
 
+from dotenv import load_dotenv
+
+# Загружаем переменные из .env
+load_dotenv()  
+
 TOKEN = os.getenv("TOKEN")
+if not TOKEN:
+    raise ValueError("Токен бота не найден! Проверьте .env файл")
+
+print("Токен:", TOKEN)  # Должен выводить ваш токен
+print("Тип токена:", type(TOKEN))  # Должен быть <class 'str'>
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 print("Current directory:", os.getcwd())
