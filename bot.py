@@ -12,7 +12,6 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 import os
 from aiogram import Bot, Dispatcher, types
-from aiogram.utils import executor
 
 TOKEN = os.getenv("TOKEN")
 bot = Bot(token=TOKEN)
