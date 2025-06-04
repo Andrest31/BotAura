@@ -282,12 +282,12 @@ async def post_init(application: Application):
     await application.bot.delete_webhook(drop_pending_updates=True)
 
 def main():
-    app.add_handler(CommandHandler('check', check_creds))
+
     app = Application.builder() \
         .token(TOKEN) \
         .post_init(post_init) \
         .build()
-
+    app.add_handler(CommandHandler('check', check_creds))
     conv = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
