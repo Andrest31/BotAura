@@ -17,7 +17,8 @@ from aiogram.utils import executor
 TOKEN = os.getenv("TOKEN")
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
-
+print("Current directory:", os.getcwd())
+print("Files in directory:", os.listdir('.'))
 # Настройка логирования
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
