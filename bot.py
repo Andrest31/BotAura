@@ -30,14 +30,29 @@ SPREADSHEET_ID = "1e5bOACbvTHXGfihhEGURvVX0AIOBSEOgziAfnQNr-Dc"
 # Инициализация Google Sheets
 def get_sheets_service():
     try:
-        service_account_info = json.loads(os.environ['SERVICE_ACCOUNT_JSON'])
+        # Проверка существования переменной
+        if 'SERVICE_ACCOUNT_JSON' not in os.environ:
+            raise ValueError("Переменная SERVICE_ACCOUNT_JSON не найдена в окружении")
+            
+        # Загрузка и проверка JSON
+        sa_json = os.environ['SERVICE_ACCOUNT_JSON']
+        if not sa_json.strip().startswith('{'):
+            raise ValueError("Некорректный формат SERVICE_ACCOUNT_JSON")
+            
+        service_account_info = json.loads(sa_json)
+        
+        # Создание credentials
         creds = Credentials.from_service_account_info(
             service_account_info,
             scopes=['https://www.googleapis.com/auth/spreadsheets']
         )
         return build('sheets', 'v4', credentials=creds).spreadsheets()
+        
+    except json.JSONDecodeError:
+        logger.error("Ошибка декодирования SERVICE_ACCOUNT_JSON: невалидный JSON")
+        raise
     except Exception as e:
-        logger.error(f"Ошибка инициализации Google Sheets: {e}")
+        logger.error(f"Критическая ошибка инициализации Google Sheets: {str(e)}")
         raise
 
 # Состояния
