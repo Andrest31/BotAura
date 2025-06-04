@@ -13,7 +13,7 @@ from googleapiclient.discovery import build
 import os
 from aiogram import Bot, Dispatcher, types
 
-TOKEN = os.environ['TOKEN'] 
+TOKEN = "7957920663:AAGq1SLpvdf9kyRALbwZxcinQZsojUKOOF8"
 if not TOKEN:
     raise ValueError("Токен бота не найден! Проверьте .env файл")
 
