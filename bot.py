@@ -15,7 +15,7 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
 # Настройка токена (добавьте в переменные окружения Railway)
-TOKEN = os.environ.get('TOKEN', '7754623896:AAFShPTcPApWhvQfdeKuY_dcWd-RhZsYJbY')
+TOKEN = os.environ.get('TOKEN', '8196025392:AAGhJVa3gLMlnnRQPFywVnUEP-qihiz57uQ')
 
 # Настройка логирования
 logging.basicConfig(
@@ -330,6 +330,21 @@ def main():
     )
 
     app.add_handler(conv)
+
+    # Жёсткая проверка переменных
+    if 'SERVICE_ACCOUNT_JSON' not in os.environ:
+        logger.critical("FATAL: SERVICE_ACCOUNT_JSON не найдена!")
+        logger.critical("Добавьте её в Railway: Settings → Variables")
+        logger.critical(f"Текущие переменные: {list(os.environ.keys())}")
+        exit(1)
+    
+    # Проверка формата JSON
+    try:
+        json.loads(os.environ['SERVICE_ACCOUNT_JSON'])
+        logger.info("✅ SERVICE_ACCOUNT_JSON валидна")
+    except json.JSONDecodeError:
+        logger.critical("FATAL: Неправильный JSON в SERVICE_ACCOUNT_JSON!")
+        exit(1)
     
     logger.info("Бот запускается...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
