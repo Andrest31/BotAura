@@ -26,7 +26,16 @@ logger = logging.getLogger(__name__)
 
 # Конфигурация Google Sheets
 SPREADSHEET_ID = "1e5bOACbvTHXGfihhEGURvVX0AIOBSEOgziAfnQNr-Dc"
-
+async def check_creds(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        from google.oauth2 import service_account
+        creds = service_account.Credentials.from_service_account_info(
+            json.loads(os.environ['SERVICE_ACCOUNT_JSON']),
+            scopes=['https://www.googleapis.com/auth/spreadsheets']
+        )
+        await update.message.reply_text("✅ Google Sheets доступен!")
+    except Exception as e:
+        await update.message.reply_text(f"❌ Ошибка: {str(e)}")
 # Инициализация Google Sheets
 def get_sheets_service():
     try:
@@ -273,6 +282,7 @@ async def post_init(application: Application):
     await application.bot.delete_webhook(drop_pending_updates=True)
 
 def main():
+    app.add_handler(CommandHandler('check', check_creds))
     app = Application.builder() \
         .token(TOKEN) \
         .post_init(post_init) \
