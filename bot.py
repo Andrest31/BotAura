@@ -15,7 +15,7 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
 # Настройка токена (добавьте в переменные окружения Railway)
-TOKEN = os.environ.get('TOKEN', '7957920663:AAGq1SLpvdf9kyRALbwZxcinQZsojUKOOF8')
+TOKEN = os.environ.get('TOKEN', '7754623896:AAFShPTcPApWhvQfdeKuY_dcWd-RhZsYJbY')
 
 # Настройка логирования
 logging.basicConfig(
