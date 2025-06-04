@@ -12,6 +12,11 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 import os
 from aiogram import Bot, Dispatcher, types
+from aiogram.enums import ParseMode
+from aiogram.filters import Command
+from aiogram.fsm.storage.memory import MemoryStorage
+
+storage = MemoryStorage()
 
 TOKEN = "7957920663:AAGq1SLpvdf9kyRALbwZxcinQZsojUKOOF8"
 if not TOKEN:
@@ -20,7 +25,7 @@ if not TOKEN:
 print("Токен:", TOKEN)  # Должен выводить ваш токен
 print("Тип токена:", type(TOKEN))  # Должен быть <class 'str'>
 bot = Bot(token=TOKEN)
-dp = Dispatcher(bot)
+dp = Dispatcher()
 print("Current directory:", os.getcwd())
 print("Files in directory:", os.listdir('.'))
 # Настройка логирования
