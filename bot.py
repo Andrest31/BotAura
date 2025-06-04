@@ -13,12 +13,7 @@ from googleapiclient.discovery import build
 import os
 from aiogram import Bot, Dispatcher, types
 
-from dotenv import load_dotenv
-
-# Загружаем переменные из .env
-load_dotenv()  
-
-TOKEN = os.getenv("TOKEN")
+TOKEN = os.environ['TOKEN'] 
 if not TOKEN:
     raise ValueError("Токен бота не найден! Проверьте .env файл")
 
