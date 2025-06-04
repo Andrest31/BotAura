@@ -1,1 +1,1 @@
-worker: pip install --no-binary :all: aiohttp && python3 bot.py
+worker: python3 bot.py
