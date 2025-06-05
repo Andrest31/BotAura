@@ -2,6 +2,7 @@ import os
 import logging
 import json
 import asyncio
+import base64
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import (
     Application,
@@ -13,14 +14,6 @@ from telegram.ext import (
 )
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
-import admin from 'firebase-admin';
-
-const decoded = Buffer.from(process.env.SERVICE_ACCOUNT_BASE64!, "base64").toString("utf-8");
-const serviceAccount = JSON.parse(decoded);
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
 
 # Настройка токена (добавьте в переменные окружения Railway)
 TOKEN = os.environ.get('TOKEN', '8196025392:AAGhJVa3gLMlnnRQPFywVnUEP-qihiz57uQ')
@@ -34,43 +27,30 @@ logger = logging.getLogger(__name__)
 
 # Конфигурация Google Sheets
 SPREADSHEET_ID = "1e5bOACbvTHXGfihhEGURvVX0AIOBSEOgziAfnQNr-Dc"
+
 async def check_creds(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        from google.oauth2 import service_account
-        creds = service_account.Credentials.from_service_account_info(
-            json.loads(os.environ['SERVICE_ACCOUNT_JSON']),
-            scopes=['https://www.googleapis.com/auth/spreadsheets']
-        )
+        creds = get_credentials()
         await update.message.reply_text("✅ Google Sheets доступен!")
     except Exception as e:
         await update.message.reply_text(f"❌ Ошибка: {str(e)}")
-# Инициализация Google Sheets
+
+def get_credentials():
+    if 'SERVICE_ACCOUNT_BASE64' not in os.environ:
+        raise ValueError("Переменная SERVICE_ACCOUNT_BASE64 не найдена в окружении")
+
+    base64_data = os.environ['SERVICE_ACCOUNT_BASE64']
+    json_str = base64.b64decode(base64_data).decode("utf-8")
+    service_account_info = json.loads(json_str)
+    creds = Credentials.from_service_account_info(
+        service_account_info,
+        scopes=['https://www.googleapis.com/auth/spreadsheets']
+    )
+    return creds
+
 def get_sheets_service():
-    try:
-        # Проверка существования переменной
-        if 'SERVICE_ACCOUNT_JSON' not in os.environ:
-            raise ValueError("Переменная SERVICE_ACCOUNT_JSON не найдена в окружении")
-            
-        # Загрузка и проверка JSON
-        sa_json = os.environ['SERVICE_ACCOUNT_JSON']
-        if not sa_json.strip().startswith('{'):
-            raise ValueError("Некорректный формат SERVICE_ACCOUNT_JSON")
-            
-        service_account_info = json.loads(sa_json)
-        
-        # Создание credentials
-        creds = Credentials.from_service_account_info(
-            service_account_info,
-            scopes=['https://www.googleapis.com/auth/spreadsheets']
-        )
-        return build('sheets', 'v4', credentials=creds).spreadsheets()
-        
-    except json.JSONDecodeError:
-        logger.error("Ошибка декодирования SERVICE_ACCOUNT_JSON: невалидный JSON")
-        raise
-    except Exception as e:
-        logger.error(f"Критическая ошибка инициализации Google Sheets: {str(e)}")
-        raise
+    creds = get_credentials()
+    return build('sheets', 'v4', credentials=creds).spreadsheets()
 
 # Состояния
 (
@@ -320,42 +300,26 @@ def main():
             ],
             ADDING_PLAN_QUANTITY: [
                 MessageHandler(filters.TEXT & ~filters.Regex('^❌ Отмена$'), add_plan_quantity),
-                MessageHandler(filters.Regex('^❌ Отмена$'), cancel),
-            ],
-            ADDING_MADE_QUANTITY: [
-                MessageHandler(filters.TEXT & ~filters.Regex('^❌ Отмена$'), add_made_quantity),
-                MessageHandler(filters.Regex('^❌ Отмена$'), cancel),
-            ],
-            SELECTING_PRODUCT_FOR_DELETE: [
-                MessageHandler(filters.TEXT & ~filters.Regex('^❌ Отмена$'), confirm_delete_product),
-                MessageHandler(filters.Regex('^❌ Отмена$'), cancel),
-            ],
-            CONFIRMING_DELETE: [
-                MessageHandler(filters.Regex('^(✅ Да|❌ Нет)$'), do_delete_product),
-            ],
-        },
-        fallbacks=[CommandHandler('cancel', cancel)]
-    )
-
+                MessageHandler(filters.Regex('^❌ Отмена$ChatGPT сказал:'), cancel),
+],
+ADDING_MADE_QUANTITY: [
+MessageHandler(filters.TEXT & ~filters.Regex('^❌ Отмена$'), add_made_quantity),
+MessageHandler(filters.Regex('^❌ Отмена$'), cancel),
+],
+SELECTING_PRODUCT_FOR_DELETE: [
+MessageHandler(filters.TEXT & ~filters.Regex('^❌ Отмена$'), confirm_delete_product),
+MessageHandler(filters.Regex('^❌ Отмена$'), cancel),
+],
+CONFIRMING_DELETE: [
+MessageHandler(filters.Regex('^✅ Да$'), do_delete_product),
+MessageHandler(filters.Regex('^❌ Нет$'), do_delete_product),
+],
+},
+fallbacks=[CommandHandler('cancel', cancel)],
+allow_reentry=True,
+)
     app.add_handler(conv)
-
-    # Жёсткая проверка переменных
-    if 'SERVICE_ACCOUNT_JSON' not in os.environ:
-        logger.critical("FATAL: SERVICE_ACCOUNT_JSON не найдена!")
-        logger.critical("Добавьте её в Railway: Settings → Variables")
-        logger.critical(f"Текущие переменные: {list(os.environ.keys())}")
-        exit(1)
-    
-    # Проверка формата JSON
-    try:
-        json.loads(os.environ['SERVICE_ACCOUNT_JSON'])
-        logger.info("✅ SERVICE_ACCOUNT_JSON валидна")
-    except json.JSONDecodeError:
-        logger.critical("FATAL: Неправильный JSON в SERVICE_ACCOUNT_JSON!")
-        exit(1)
-    
-    logger.info("Бот запускается...")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    app.run_polling()
 
 if __name__ == '__main__':
     main()
