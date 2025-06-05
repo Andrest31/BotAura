@@ -13,6 +13,14 @@ from telegram.ext import (
 )
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
+import admin from 'firebase-admin';
+
+const decoded = Buffer.from(process.env.SERVICE_ACCOUNT_BASE64!, "base64").toString("utf-8");
+const serviceAccount = JSON.parse(decoded);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 # Настройка токена (добавьте в переменные окружения Railway)
 TOKEN = os.environ.get('TOKEN', '8196025392:AAGhJVa3gLMlnnRQPFywVnUEP-qihiz57uQ')
